@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesgos en la Vida Real</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,300;1,9..144,600&family=Instrument+Sans:wght@400;500;600&family=Instrument+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f3;
+  --surface: #f3f0e8;
+  --card: #ffffff;
+  --border: #e0d9cc;
+  --border2: #c8bfae;
+  --ink: #1c1810;
+  --ink2: #3d3628;
+  --muted: #8a7d6a;
+  --muted2: #6a5e4e;
+
+  /* Life domains */
+  --rel:  #c0392b;   /* Relaciones — rojo tierra */
+  --dec:  #d68910;   /* Decisiones — ámbar */
+  --sal:  #1e8449;   /* Salud — verde */
+  --con:  #1a5276;   /* Consumo — azul marino */
+  --soc:  #6c3483;   /* Social/Digital — violeta */
+
+  --ff: 'Fraunces', serif;
+  --fs: 'Instrument Sans', sans-serif;
+  --fm: 'Instrument Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--fs); background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+/* Paper texture overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* ── TOP NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(250,248,243,0.93);
+  backdrop-filter: blur(10px);
+  border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: stretch;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-logo {
+  font-family: var(--ff); font-size: 0.9rem; font-weight: 600;
+  color: var(--ink2); padding: 0 1.4rem;
+  border-right: 1.5px solid var(--border);
+  display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+.nav-logo em { font-style: italic; font-weight: 300; color: var(--muted); }
+.ntab {
+  padding: 0.85rem 1.1rem; font-size: 0.78rem; font-weight: 600;
+  color: var(--muted); cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  border-bottom: 2.5px solid transparent; letter-spacing: 0.04em;
+  transition: color 0.2s, border-color 0.2s; display: flex; align-items: center; gap: 0.4rem;
+}
+.ntab:hover { color: var(--ink); }
+.ntab.active { color: var(--ink); border-bottom-color: var(--ink); }
+.ntab.t-rel.active  { color: var(--rel); border-color: var(--rel); }
+.ntab.t-dec.active  { color: var(--dec); border-color: var(--dec); }
+.ntab.t-sal.active  { color: var(--sal); border-color: var(--sal); }
+.ntab.t-con.active  { color: var(--con); border-color: var(--con); }
+.ntab.t-soc.active  { color: var(--soc); border-color: var(--soc); }
+.ntab.t-quiz.active { color: var(--ink); border-color: var(--ink); }
+
+/* ── STATS STRIP ── */
+.strip {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
+}
+.strip::-webkit-scrollbar { display: none; }
+.strip-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.55rem 1.2rem; font-family: var(--fm); font-size: 0.68rem;
+  border-right: 1px solid var(--border); white-space: nowrap;
+}
+.sdot { width: 7px; height: 7px; border-radius: 50%; }
+.sl { color: var(--muted); }
+.sv { color: var(--ink); font-weight: 500; }
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: block; }
+.inner { max-width: 1140px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+
+/* ── HOME ── */
+.hero { max-width: 760px; margin: 0 auto; text-align: center; padding: 4rem 1rem 3.5rem; }
+.hero-sup { font-family: var(--fm); font-size: 0.7rem; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; margin-bottom: 1.2rem; }
+.hero h1 { font-family: var(--ff); font-size: clamp(2rem,5.5vw,3.6rem); font-weight: 800; line-height: 1.06; letter-spacing: -0.03em; margin-bottom: 1.2rem; }
+.hero h1 em { font-style: italic; font-weight: 300; color: var(--muted2); }
+.hero p { font-family: var(--ff); font-size: 1.1rem; font-weight: 300; color: var(--muted2); line-height: 1.75; margin-bottom: 3rem; font-style: italic; }
+
+.domain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--border); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; }
+.dc {
+  background: var(--card); padding: 1.8rem 1.5rem; cursor: pointer;
+  transition: background 0.18s; position: relative;
+}
+.dc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.dc:hover { background: #fdfcf7; }
+.dc-rel::before  { background: var(--rel); }
+.dc-dec::before  { background: var(--dec); }
+.dc-sal::before  { background: var(--sal); }
+.dc-con::before  { background: var(--con); }
+.dc-soc::before  { background: var(--soc); }
+.dc-icon { font-size: 1.8rem; margin-bottom: 0.7rem; }
+.dc-title { font-family: var(--ff); font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; letter-spacing: -0.01em; }
+.dc-rel .dc-title  { color: var(--rel); }
+.dc-dec .dc-title  { color: var(--dec); }
+.dc-sal .dc-title  { color: var(--sal); }
+.dc-con .dc-title  { color: var(--con); }
+.dc-soc .dc-title  { color: var(--soc); }
+.dc-sub { font-size: 0.78rem; color: var(--muted); line-height: 1.5; margin-bottom: 0.6rem; }
+.dc-count { font-family: var(--fm); font-size: 0.68rem; color: var(--muted); }
+
+/* ── DOMAIN SCREENS ── */
+.domain-header { padding: 2.5rem 0 2rem; border-bottom: 1.5px solid var(--border); margin-bottom: 2rem; }
+.dh-eyebrow { font-family: var(--fm); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+.dh-title { font-family: var(--ff); font-size: clamp(1.6rem,4vw,2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.dh-desc { font-family: var(--ff); font-style: italic; font-weight: 300; color: var(--muted2); margin-top: 0.6rem; font-size: 1rem; line-height: 1.7; }
+
+/* Filter bar */
+.fbar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.2rem; align-items: center; }
+.fbtn {
+  padding: 0.38rem 0.9rem; border-radius: 99px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-family: var(--fs);
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em;
+  transition: all 0.15s; white-space: nowrap;
+}
+.fbtn:hover { border-color: var(--border2); color: var(--ink2); }
+.fbtn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.bias-tally { font-family: var(--fm); font-size: 0.68rem; color: var(--muted); margin-left: auto; }
+
+/* Category block */
+.cat-block { margin-bottom: 2.2rem; }
+.cat-tag {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--fm); font-size: 0.67rem; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 0.3rem 0.8rem;
+  border-radius: 4px; margin-bottom: 0.9rem; border: 1px solid;
+}
+.bg { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: 0.8rem; }
+
+/* Bias card */
+.bc {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 1.1rem 1.2rem 1rem;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+  animation: pop 0.28s ease forwards; opacity: 0;
+}
+@keyframes pop { to { opacity:1; } }
+.bc:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+.bc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.5rem; }
+.bc-name { font-family: var(--ff); font-size: 0.95rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+.bc-en { font-family: var(--fm); font-size: 0.62rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.04em; }
+.bc-def { font-size: 0.82rem; color: var(--muted2); line-height: 1.58; font-family: var(--ff); font-weight: 300; font-style: italic; }
+.bc-more { display: none; margin-top: 0.9rem; padding-top: 0.85rem; border-top: 1px solid var(--border); }
+.bc.open .bc-more { display: block; }
+.bc-lbl { font-family: var(--fm); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.28rem; margin-top: 0.65rem; }
+.bc-lbl:first-child { margin-top: 0; }
+.bc-txt { font-size: 0.83rem; color: var(--ink2); line-height: 1.6; }
+.bc-hint { font-family: var(--fm); font-size: 0.62rem; color: var(--border2); margin-top: 0.55rem; }
+.bc-num { position: absolute; top: 0.7rem; right: 0.8rem; font-family: var(--fm); font-size: 0.6rem; color: var(--border2); }
+
+/* ── QUIZ ── */
+.qwrap { max-width: 700px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+#qs-start { text-align: center; padding: 2rem 0 3rem; }
+#qs-start h2 { font-family: var(--ff); font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.6rem; }
+#qs-start p { font-family: var(--ff); font-style: italic; font-weight: 300; color: var(--muted2); font-size: 1rem; line-height: 1.7; margin-bottom: 2rem; }
+.mode-g { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.75rem; max-width: 520px; margin: 0 auto 2rem; }
+.qm {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 1.1rem 1.2rem; cursor: pointer;
+  transition: border-color 0.18s, transform 0.15s; text-align: left;
+}
+.qm:hover { transform: translateY(-2px); border-color: var(--border2); }
+.qm.sel { border-color: var(--ink); background: #fdfcf7; }
+.qm-ico { font-size: 1.4rem; margin-bottom: 0.45rem; }
+.qm-t { font-family: var(--ff); font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; }
+.qm-d { font-size: 0.76rem; color: var(--muted); line-height: 1.4; }
+.btn-go {
+  padding: 0.85rem 2.8rem; background: var(--ink); border: none; color: #fff;
+  font-family: var(--fs); font-size: 0.88rem; font-weight: 600;
+  border-radius: 8px; cursor: pointer; letter-spacing: 0.03em;
+  transition: opacity 0.18s, transform 0.1s;
+}
+.btn-go:hover { opacity: 0.88; transform: translateY(-1px); }
+
+#qs-q { display: none; }
+.qprog { margin-bottom: 1.5rem; }
+.qpbar { height: 2px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 0.45rem; }
+.qpfill { height: 100%; background: var(--ink); border-radius: 99px; transition: width 0.4s; }
+.qpmeta { display: flex; justify-content: space-between; font-family: var(--fm); font-size: 0.68rem; color: var(--muted); }
+
+.qcard {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 1.8rem;
+  animation: pop 0.28s ease;
+}
+.q-domain-tag { font-family: var(--fm); font-size: 0.67rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.8rem; font-weight: 500; }
+.q-scene { font-family: var(--ff); font-size: 1.05rem; font-weight: 300; line-height: 1.76; color: var(--ink); margin-bottom: 0.6rem; }
+.q-ask { font-size: 0.82rem; font-weight: 600; color: var(--muted2); margin-bottom: 1.3rem; }
+.q-opts { display: flex; flex-direction: column; gap: 0.55rem; }
+.qopt {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 0.82rem 1rem;
+  cursor: pointer; text-align: left; color: var(--ink2);
+  font-family: var(--fs); font-size: 0.87rem; line-height: 1.45;
+  display: flex; gap: 0.7rem; align-items: flex-start;
+  transition: border-color 0.12s, background 0.12s; width: 100%;
+}
+.qopt:hover:not(.dis) { border-color: var(--border2); background: var(--bg); color: var(--ink); }
+.qopt.ok  { border-color: var(--sal); background: #edf7f2; color: var(--ink); }
+.qopt.no  { border-color: var(--rel); background: #fdf2f0; color: var(--ink); }
+.qopt.dis { cursor: not-allowed; }
+.ql {
+  width: 22px; height: 22px; border-radius: 4px; background: var(--border);
+  color: var(--muted); font-family: var(--fm); font-size: 0.68rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2px; transition: background 0.12s, color 0.12s;
+}
+.qopt.ok .ql { background: var(--sal); color: #fff; }
+.qopt.no .ql { background: var(--rel); color: #fff; }
+
+.qfb { display: none; margin-top: 1.2rem; padding: 1.1rem 1.2rem; border-radius: 8px; font-size: 0.87rem; line-height: 1.68; }
+.qfb.ok { background: #edf7f2; border: 1.5px solid #b8dfc8; }
+.qfb.no { background: #fdf2f0; border: 1.5px solid #e8bdb8; }
+.qfb-t { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; }
+.qfb.ok .qfb-t { color: var(--sal); }
+.qfb.no .qfb-t { color: var(--rel); }
+.qfb p { color: var(--ink2); font-family: var(--ff); font-weight: 300; font-size: 0.9rem; line-height: 1.65; }
+.qfb-tip { margin-top: 0.6rem; padding: 0.65rem 0.9rem; border-radius: 6px; background: rgba(0,0,0,0.03); font-size: 0.8rem; color: var(--muted2); font-family: var(--ff); font-weight: 300; }
+.qfb-ref { font-family: var(--fm); font-size: 0.62rem; color: var(--muted); margin-top: 0.5rem; }
+
+.btn-next {
+  display: none; margin-top: 1.2rem; width: 100%;
+  padding: 0.8rem; background: var(--ink); border: none; color: #fff;
+  font-family: var(--fs); font-size: 0.88rem; font-weight: 600;
+  border-radius: 8px; cursor: pointer; transition: opacity 0.18s;
+}
+.btn-next:hover { opacity: 0.85; }
+
+/* Results */
+#qs-res { display: none; text-align: center; }
+.res-big { font-family: var(--ff); font-size: 5rem; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
+.res-den { font-family: var(--fm); font-size: 0.82rem; color: var(--muted); margin-bottom: 1.1rem; }
+.res-tit { font-family: var(--ff); font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+.res-desc { font-family: var(--ff); font-style: italic; font-weight: 300; color: var(--muted2); font-size: 0.96rem; line-height: 1.7; max-width: 500px; margin: 0 auto 2rem; }
+.res-domains { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 0.75rem; margin-bottom: 1.5rem; text-align: left; }
+.rd-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+.rd-label { font-family: var(--fm); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem; }
+.rd-score { font-family: var(--ff); font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem; }
+.rd-bar { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.rd-fill { height: 100%; border-radius: 99px; transition: width 0.6s; }
+.btn-restart {
+  padding: 0.8rem 2.2rem; background: var(--ink); border: none; color: #fff;
+  font-family: var(--fs); font-size: 0.88rem; font-weight: 600;
+  border-radius: 8px; cursor: pointer; transition: opacity 0.18s;
+}
+.btn-restart:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">Sesgos en la <em>vida real</em></div>
+  <div class="ntab active"            onclick="go('home',this)">Inicio</div>
+  <div class="ntab t-rel"             onclick="go('rel',this)">❤️ Relaciones</div>
+  <div class="ntab t-dec"             onclick="go('dec',this)">🧭 Decisiones</div>
+  <div class="ntab t-sal"             onclick="go('sal',this)">🩺 Salud</div>
+  <div class="ntab t-con"             onclick="go('con',this)">🛒 Consumo</div>
+  <div class="ntab t-soc"             onclick="go('soc',this)">📱 Social & Digital</div>
+  <div class="ntab t-quiz"            onclick="go('quiz',this)">⚡ Quiz</div>
+</nav>
+
+<div class="strip">
+  <div class="strip-item"><div class="sdot" style="background:var(--rel)"></div><span class="sl">Relaciones</span><span class="sv" id="s1">—</span></div>
+  <div class="strip-item"><div class="sdot" style="background:var(--dec)"></div><span class="sl">Decisiones</span><span class="sv" id="s2">—</span></div>
+  <div class="strip-item"><div class="sdot" style="background:var(--sal)"></div><span class="sl">Salud</span><span class="sv" id="s3">—</span></div>
+  <div class="strip-item"><div class="sdot" style="background:var(--con)"></div><span class="sl">Consumo</span><span class="sv" id="s4">—</span></div>
+  <div class="strip-item"><div class="sdot" style="background:var(--soc)"></div><span class="sl">Social & Digital</span><span class="sv" id="s5">—</span></div>
+  <div class="strip-item"><span class="sl">Total</span><span class="sv" id="s0">—</span></div>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <div class="hero-sup">Cognitive Bias Codex · Vida Cotidiana</div>
+    <h1>Los errores que tu cerebro<br>comete <em>todos los días</em></h1>
+    <p>No en una sala de juntas. En una discusión con tu pareja, al elegir qué comer, al scrollear redes, al decidir si ir al médico.</p>
+  </div>
+  <div class="inner" style="padding-top:0">
+    <div class="domain-grid">
+      <div class="dc dc-rel" onclick="go('rel')">
+        <div class="dc-icon">❤️</div>
+        <div class="dc-title">Relaciones</div>
+        <div class="dc-sub">Pareja, familia, amigos, conflictos y comunicación interpersonal.</div>
+        <div class="dc-count" id="hc1">— sesgos</div>
+      </div>
+      <div class="dc dc-dec" onclick="go('dec')">
+        <div class="dc-icon">🧭</div>
+        <div class="dc-title">Decisiones personales</div>
+        <div class="dc-sub">Trabajo, carrera, dinero personal, cambios de vida, riesgo.</div>
+        <div class="dc-count" id="hc2">— sesgos</div>
+      </div>
+      <div class="dc dc-sal" onclick="go('sal')">
+        <div class="dc-icon">🩺</div>
+        <div class="dc-title">Salud y bienestar</div>
+        <div class="dc-sub">Síntomas, medicamentos, dieta, ejercicio y decisiones médicas.</div>
+        <div class="dc-count" id="hc3">— sesgos</div>
+      </div>
+      <div class="dc dc-con" onclick="go('con')">
+        <div class="dc-icon">🛒</div>
+        <div class="dc-title">Consumo y dinero</div>
+        <div class="dc-sub">Compras, precios, publicidad, ahorro y gastos cotidianos.</div>
+        <div class="dc-count" id="hc4">— sesgos</div>
+      </div>
+      <div class="dc dc-soc" onclick="go('soc')">
+        <div class="dc-icon">📱</div>
+        <div class="dc-title">Social y digital</div>
+        <div class="dc-sub">Redes sociales, noticias, opiniones, grupos y reputación online.</div>
+        <div class="dc-count" id="hc5">— sesgos</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DOMAIN SCREENS -->
+<div class="screen" id="screen-rel">
+  <div class="inner">
+    <div class="domain-header">
+      <div class="dh-eyebrow" style="color:var(--rel)">Dominio I · Relaciones</div>
+      <div class="dh-title" style="color:var(--rel)">El cerebro en modo pareja,<br>familia y amistad.</div>
+      <div class="dh-desc">Aquí los sesgos duelen más porque el costo es emocional. Juzgamos injustamente, recordamos mal, atribuimos intenciones que no existen.</div>
+    </div>
+    <div class="fbar" id="fb-rel"></div>
+    <div class="bias-tally" id="bt-rel"></div>
+    <div id="g-rel"></div>
+  </div>
+</div>
+
+<div class="screen" id="screen-dec">
+  <div class="inner">
+    <div class="domain-header">
+      <div class="dh-eyebrow" style="color:var(--dec)">Dominio II · Decisiones personales</div>
+      <div class="dh-title" style="color:var(--dec)">El cerebro frente a<br>las encrucijadas cotidianas.</div>
+      <div class="dh-desc">Trabajo, dinero, cambios de vida. El cerebro toma atajos para decidir rápido que a menudo llevan a decisiones de las que nos arrepentimos.</div>
+    </div>
+    <div class="fbar" id="fb-dec"></div>
+    <div class="bias-tally" id="bt-dec"></div>
+    <div id="g-dec"></div>
+  </div>
+</div>
+
+<div class="screen" id="screen-sal">
+  <div class="inner">
+    <div class="domain-header">
+      <div class="dh-eyebrow" style="color:var(--sal)">Dominio III · Salud y bienestar</div>
+      <div class="dh-title" style="color:var(--sal)">El cerebro cuando<br>el cuerpo importa.</div>
+      <div class="dh-desc">Ignoramos síntomas, sobreestimamos riesgos raros, confiamos en lo natural y evitamos al médico. Los sesgos en salud pueden costar caro.</div>
+    </div>
+    <div class="fbar" id="fb-sal"></div>
+    <div class="bias-tally" id="bt-sal"></div>
+    <div id="g-sal"></div>
+  </div>
+</div>
+
+<div class="screen" id="screen-con">
+  <div class="inner">
+    <div class="domain-header">
+      <div class="dh-eyebrow" style="color:var(--con)">Dominio IV · Consumo y dinero</div>
+      <div class="dh-title" style="color:var(--con)">El cerebro frente<br>a precios y publicidad.</div>
+      <div class="dh-desc">Las marcas y vendedores conocen estos sesgos mejor que tú. Aprenderlos es la mejor defensa contra decisiones de compra que lamentarás.</div>
+    </div>
+    <div class="fbar" id="fb-con"></div>
+    <div class="bias-tally" id="bt-con"></div>
+    <div id="g-con"></div>
+  </div>
+</div>
+
+<div class="screen" id="screen-soc">
+  <div class="inner">
+    <div class="domain-header">
+      <div class="dh-eyebrow" style="color:var(--soc)">Dominio V · Social y digital</div>
+      <div class="dh-title" style="color:var(--soc)">El cerebro en la<br>era de las pantallas.</div>
+      <div class="dh-desc">Las redes sociales están diseñadas para explotar estos sesgos. Algoritmos, desinformación, burbujas de opinión — todo opera sobre patrones cognitivos predecibles.</div>
+    </div>
+    <div class="fbar" id="fb-soc"></div>
+    <div class="bias-tally" id="bt-soc"></div>
+    <div id="g-soc"></div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="screen-quiz">
+  <div class="qwrap">
+    <div id="qs-start">
+      <h2>¿Reconoces el sesgo<br>en tu propia vida?</h2>
+      <p>Situaciones de todos los días. Sin finanzas, sin auditorías. Solo tú, tu cerebro y las decisiones reales.</p>
+      <div class="mode-g">
+        <div class="qm sel" onclick="selM(0)" id="qm0"><div class="qm-ico">🌐</div><div class="qm-t">Todo el codex</div><div class="qm-d">Los 5 dominios · 25 preguntas</div></div>
+        <div class="qm"     onclick="selM(1)" id="qm1"><div class="qm-ico">❤️</div><div class="qm-t">Relaciones</div><div class="qm-d">Pareja, familia, amigos</div></div>
+        <div class="qm"     onclick="selM(2)" id="qm2"><div class="qm-ico">🧭</div><div class="qm-t">Decisiones</div><div class="qm-d">Trabajo, carrera, cambios</div></div>
+        <div class="qm"     onclick="selM(3)" id="qm3"><div class="qm-ico">🩺</div><div class="qm-t">Salud</div><div class="qm-d">Cuerpo, médico, bienestar</div></div>
+        <div class="qm"     onclick="selM(4)" id="qm4"><div class="qm-ico">🛒</div><div class="qm-t">Consumo</div><div class="qm-d">Compras, dinero, precios</div></div>
+        <div class="qm"     onclick="selM(5)" id="qm5"><div class="qm-ico">📱</div><div class="qm-t">Social & Digital</div><div class="qm-d">Redes, noticias, opinión</div></div>
+      </div>
+      <button class="btn-go" onclick="startQ()">Comenzar →</button>
+    </div>
+    <div id="qs-q">
+      <div class="qprog">
+        <div class="qpbar"><div class="qpfill" id="qpf" style="width:0%"></div></div>
+        <div class="qpmeta"><span id="qnum">1/25</span><span id="qdomain"></span></div>
+      </div>
+      <div class="qcard" id="qcard"></div>
+    </div>
+    <div id="qs-res">
+      <div class="res-big" id="r-n">0</div>
+      <div class="res-den" id="r-d">de 25</div>
+      <div class="res-tit" id="r-t"></div>
+      <p class="res-desc" id="r-desc"></p>
+      <div class="res-domains" id="r-domains"></div>
+      <button class="btn-restart" onclick="resetQ()">Intentar de nuevo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════
+// DATA
+// ══════════════════════════
+const DOMAINS = {
+  rel: {
+    color:'var(--rel)', hex:'#c0392b', label:'Relaciones',
+    cats: {
+      "Percepción del otro": [
+        { name:"Efecto Halo en el amor", en:"Halo Effect", def:"Cuando alguien nos atrae físicamente, asumimos automáticamente que también es inteligente, buena persona y confiable.", ex:"Te gusta alguien en una app de citas por sus fotos y ya lo imaginas con todas las virtudes posibles — antes de hablar una sola vez.", tip:"Distingue la atracción física de las cualidades de carácter. Date tiempo antes de proyectar virtudes no verificadas." },
+        { name:"Error de Atribución Fundamental", en:"Fundamental Attribution Error", def:"Explicamos el mal comportamiento de otros por cómo son, pero el nuestro por las circunstancias.", ex:"Tu pareja llega tarde: 'es desconsiderado'. Tú llegas tarde: 'el tráfico estaba horrible, no era mi culpa'.", tip:"Antes de juzgar, pregúntate: ¿qué circunstancia externa podría explicar lo que hizo? Dale el mismo beneficio que te das a ti." },
+        { name:"Efecto Cuerno", en:"Horn Effect", def:"Un defecto notable contamina toda la percepción de una persona, incluso en áreas no relacionadas.", ex:"Tu amigo llegó tarde a tu boda y ahora cada vez que hace algo levemente mal, lo ves todo a través de ese filtro.", tip:"Evalúa comportamientos de forma aislada. Un error grave no define la totalidad de una persona." },
+        { name:"Sesgo de Proyección", en:"Projection Bias", def:"Asumimos que los demás sienten, piensan y quieren lo mismo que nosotros.", ex:"A ti te gusta que te den espacio cuando estás molesto, entonces cuando tu pareja está molesta, le das espacio — pero ella necesitaba lo contrario.", tip:"Pregunta directamente qué necesita la otra persona. Tu forma de recibir amor no es necesariamente la de los demás." },
+        { name:"Mente del Lector", en:"Mind Reading Bias", def:"Creemos saber lo que otros piensan o sienten sin verificarlo.", ex:"'Sé que le molestó lo que dije aunque no lo dijo.' En realidad no lo sabes — y actúas en base a esa suposición.", tip:"Verifica. Pregunta: '¿Cómo te sientes con esto?' Las suposiciones sobre la mente ajena son casi siempre parciales." },
+        { name:"Sesgo de Negatividad en Relaciones", en:"Negativity Bias", def:"En relaciones cercanas, los eventos negativos pesan más que los positivos de la misma magnitud.", ex:"Una crítica de tu pareja borra el efecto de diez cumplidos de esa misma semana.", tip:"Necesitas aproximadamente 5 interacciones positivas para 'compensar' una negativa. Sé intencional con lo positivo." },
+      ],
+      "Conflicto y comunicación": [
+        { name:"Sesgo de Victimización", en:"Victim Bias", def:"En un conflicto, cada parte recuerda más sus propios sacrificios y el daño recibido que el que causó.", ex:"'Siempre cedo yo.' Tu pareja dice exactamente lo mismo. Ambos tienen razón parcialmente — y ninguno ve el cuadro completo.", tip:"Haz una lista de lo que tú has aportado Y de lo que la otra persona ha aportado. La lista equilibrada suele sorprender." },
+        { name:"Escalada Simétrica", en:"Conflict Escalation Bias", def:"En conflictos, ambas partes perciben que el otro escaló primero y que su propia escalada fue 'respuesta justa'.", ex:"'Levanté la voz porque tú pusiste los ojos en blanco.' 'Puse los ojos en blanco porque tú ya hablabas en tono cortante.'", tip:"Acepta que en conflictos circulares, el 'origen' es arbitrario. Rompe el ciclo sin buscar quién empezó." },
+        { name:"Efecto de Falso Consenso", en:"False Consensus Effect", def:"Creemos que nuestra pareja o familia comparte nuestras prioridades y preferencias sin haberlas preguntado.", ex:"Asumir que tu familia quiere pasar la Navidad igual que siempre porque a ti te gusta así.", tip:"Pregunta explícitamente qué quiere cada quien antes de asumir que todos quieren lo mismo que tú." },
+        { name:"Sesgo de Desconfirmación", en:"Disconfirmation Bias", def:"Aplicamos más escrutinio y exigencia a los argumentos que contradicen nuestra posición en un conflicto.", ex:"Cuando tu pareja da razones para cambiar algo, encuentras objeciones para todo. Pero cuando das tus razones, esperas que las acepte sin más.", tip:"Aplica el mismo estándar de análisis a los argumentos del otro que a los tuyos propios." },
+        { name:"Reescritura de la Historia Relacional", en:"Memory Reconsolidation in Relationships", def:"Cuando una relación va mal, reescribimos el pasado para que sea consistente con la visión actual.", ex:"Después de una ruptura dolorosa, recordamos toda la relación como si siempre hubiera sido mala, olvidando los buenos momentos.", tip:"El recuerdo del pasado relacional se filtra por el estado emocional presente. No tomes decisiones sobre el futuro basadas en esa versión editada." },
+        { name:"Efecto del Espectador en Pareja", en:"Bystander Effect in Relationships", def:"En relaciones, asumimos que el otro tomará la iniciativa en cosas que ambos sabemos que deben hacerse.", ex:"'¿Por qué no haces la cita con el terapeuta?' 'Pensé que tú la ibas a hacer.'", tip:"Asigna responsabilidades explícitas en vez de asumir que el otro actuará. El silencio sobre tareas pendientes es ambigüedad, no acuerdo." },
+      ],
+      "Expectativas y memoria": [
+        { name:"Sesgo del Status Quo Relacional", en:"Status Quo Bias in Relationships", def:"Permanecemos en relaciones que no nos satisfacen porque el cambio parece más costoso que seguir igual.", ex:"Llevas 3 años en una relación que sabes que no funciona, pero romper parece demasiado doloroso para intentarlo.", tip:"Pregúntate: si esta relación empezara hoy con todo lo que sé, ¿elegiría entrar en ella? La respuesta es reveladora." },
+        { name:"Efecto de la Luna de Miel", en:"Honeymoon Effect / Positive Illusions", def:"Al inicio de una relación, idealizamos al otro y subestimamos sus defectos de forma sistemática.", ex:"'Es tan perfecto/a.' Seis meses después: 'Nunca me había dado cuenta de lo desorganizado/a que es.'", tip:"Los defectos siempre estuvieron ahí. Las ilusiones positivas son adaptativas a corto plazo pero generan desilusión si no se calibran." },
+        { name:"Regla Pico-Final en Relaciones", en:"Peak-End Rule in Relationships", def:"Recordamos relaciones y conversaciones según su momento más intenso y su final, no su promedio.", ex:"Una relación de 5 años con muchos buenos momentos se recuerda principalmente por cómo terminó.", tip:"Cuida conscientemente cómo terminan las conversaciones importantes y las etapas de la relación. El cierre importa desproporcionadamente." },
+        { name:"Sesgo de Deseabilidad en Amor", en:"Desirability Bias", def:"Tendemos a subestimar cuánto queremos a alguien cuando estamos satisfechos y sobreestimarlo cuando lo perdemos.", ex:"'No lo extrañaba tanto mientras estábamos juntos, pero desde que terminamos no puedo dejar de pensar en él/ella.'", tip:"Eval tu relación cuando estás en ella, no cuando la has perdido. La perspectiva cambia radicalmente con la ausencia." },
+      ],
+    }
+  },
+
+  dec: {
+    color:'var(--dec)', hex:'#d68910', label:'Decisiones',
+    cats: {
+      "Trabajo y carrera": [
+        { name:"Falacia del Costo Hundido", en:"Sunk Cost Fallacy", def:"Continuamos en trabajos, carreras o proyectos porque ya invertimos mucho, aunque todo indique que debemos cambiar.", ex:"'Llevo 8 años en esta empresa que me hace infeliz, pero ya no puedo irme — he dado demasiado aquí.'", tip:"Los años invertidos no son recuperables. Pregúntate: si empezara hoy sin ese historial, ¿elegiría esto?" },
+        { name:"Sesgo de Status Quo en Carrera", en:"Status Quo Bias", def:"Mantenemos un empleo o carrera insatisfactorios porque el cambio parece arriesgado aunque no cambiar también lo sea.", ex:"'Tengo trabajo estable, es mejor no arriesgarme aunque odio lo que hago.'", tip:"El costo de no cambiar también existe — años de vida en algo que no te satisface. Haz explícito el costo de la inacción." },
+        { name:"Exceso de Confianza en Decisiones", en:"Overconfidence Bias", def:"Sobreestimamos nuestra habilidad para predecir el resultado de decisiones importantes de vida.", ex:"'Estoy 95% seguro de que si pongo el negocio funcionará en 6 meses.' La historia de emprendimientos dice otra cosa.", tip:"Busca la tasa base: ¿qué porcentaje de proyectos similares al tuyo funcionan en ese plazo? Ajusta tu confianza a esos datos." },
+        { name:"Falacia de la Planificación", en:"Planning Fallacy", def:"Sistemáticamente subestimamos cuánto tiempo, dinero y esfuerzo requieren nuestros proyectos personales.", ex:"'Voy a renovar el departamento en 2 meses con $50K.' Resulta: 5 meses y $90K.", tip:"Multiplica tu estimación de tiempo por 1.5 y la de costo por 1.3 como punto de partida. La historia de proyectos similares es tu mejor referencia." },
+        { name:"Sesgo de Omisión en Carrera", en:"Omission Bias", def:"Preferimos no actuar (no renunciar, no pedir aumento, no cambiar) porque el daño por inacción se siente menor.", ex:"No pedir el aumento que mereces por miedo a que digan que no — aunque no pedirlo es seguramente peor.", tip:"¿Cuál es el peor resultado de actuar vs el peor resultado de no actuar? Escríbelo. La inacción suele ser más costosa de lo que parece." },
+        { name:"Sesgo de Impacto Afectivo", en:"Impact Bias", def:"Sobreestimamos cómo nos sentiremos con un logro (o fracaso) futuro — positiva o negativamente.", ex:"'Si consigo ese trabajo, seré feliz para siempre.' O: 'Si me despiden, no me recuperaré.' Ambas proyecciones son exageradas.", tip:"Consulta a personas que ya vivieron ese evento. La intensidad y duración del impacto emocional suele ser mucho menor de lo imaginado." },
+      ],
+      "Riesgo y cambio": [
+        { name:"Aversión a la Pérdida", en:"Loss Aversion", def:"Las pérdidas duelen psicológicamente el doble de lo que placen las ganancias equivalentes.", ex:"Preferir quedarte en un empleo mediocre (evitar el riesgo de fracasar) sobre buscar uno mejor (posible ganancia).", tip:"Enmarca las decisiones en términos de resultado final. ¿Dónde estás en 5 años en cada escenario?" },
+        { name:"Sesgo de Normalidad", en:"Normalcy Bias", def:"Subestimamos la posibilidad de eventos disruptivos y asumimos que todo seguirá igual.", ex:"No tener fondo de emergencia porque 'nunca me ha pasado nada grave'. Hasta que pasa.", tip:"Haz escenarios 'what if' para eventos improbables pero posibles: pérdida de empleo, enfermedad, separación. Prepara sin catastrofizar." },
+        { name:"Descuento Hiperbólico", en:"Hyperbolic Discounting", def:"Preferimos recompensas pequeñas e inmediatas sobre recompensas mayores pero futuras.", ex:"Gastar el dinero del fondo de retiro ahora porque 'el futuro está muy lejos'.", tip:"Pre-comprométete automáticamente: ahorro automático, pagos automáticos de deuda. Elimina la decisión en el momento." },
+        { name:"Sesgo Optimista", en:"Optimism Bias", def:"Creemos que a nosotros nos irá mejor que al promedio y que los malos resultados 'le pasan a otros'.", ex:"'Yo sé que el 70% de los negocios de comida cierran en el primer año, pero el mío es diferente.'", tip:"Toma los datos del promedio en serio. Ser diferente no te exime de las fuerzas que afectan a todos los demás." },
+        { name:"Ilusión de Control", en:"Illusion of Control", def:"Creemos que podemos influir sobre resultados que dependen principalmente del azar o de otros.", ex:"Creer que controlamos completamente el resultado de una decisión de vida cuando hay múltiples variables externas.", tip:"Separa lo que controlas (esfuerzo, preparación, actitud) de lo que no (mercado, suerte, otros). Enfócate solo en lo tuyo." },
+        { name:"Contabilidad Mental", en:"Mental Accounting", def:"Tratamos el dinero de forma diferente según su origen, aunque sea idéntico en valor real.", ex:"Gastar el aguinaldo en lujos que nunca comprarías con el salario regular, aunque ambos son tu dinero.", tip:"El dinero es fungible: $100 de aguinaldo = $100 de salario. Decide cómo gastar cualquier dinero con los mismos criterios." },
+      ],
+      "Identidad y autoconcepto": [
+        { name:"Efecto Dunning-Kruger", en:"Dunning-Kruger Effect", def:"Con poco conocimiento en un área, sobreestimamos nuestra competencia. Con mucho, la subestimamos.", ex:"Después de ver 3 videos de YouTube sobre inversiones, creer que ya entiendes los mercados mejor que los expertos.", tip:"La metacognición —pensar sobre qué tan bien sabes lo que crees saber— es la herramienta principal. Calibra con expertos reales." },
+        { name:"Sesgo de Autocomplacencia", en:"Self-serving Bias", def:"Atribuimos nuestros éxitos a nuestras capacidades y nuestros fracasos a factores externos.", ex:"Aprobé porque soy inteligente. Reprobé porque el profesor es malo.", tip:"Busca el factor interno en tus fracasos y el factor externo en tus éxitos. La verdad suele estar en el medio." },
+        { name:"Ilusión de Superioridad", en:"Illusory Superiority", def:"La mayoría creemos ser mejores que el promedio en habilidades y cualidades — lo cual es estadísticamente imposible para la mayoría.", ex:"El 80% de los conductores creen manejar mejor que el promedio. El 70% de las personas creen ser más inteligentes.", tip:"Busca calibración externa y datos objetivos. El juicio de personas que te quieren suele ser más preciso que el tuyo propio sobre ti mismo." },
+        { name:"Sesgo de Retrospectiva", en:"Hindsight Bias", def:"Después de que algo ocurrió, creemos que 'lo sabíamos desde antes'.", ex:"'Sabía que ese negocio iba a fracasar.' En realidad, antes no dijiste nada — incluso estabas entusiasmado.", tip:"Escribe tus predicciones ANTES de que ocurran los eventos. El registro es el único antídoto a este sesgo." },
+      ],
+    }
+  },
+
+  sal: {
+    color:'var(--sal)', hex:'#1e8449', label:'Salud',
+    cats: {
+      "Percepción del riesgo": [
+        { name:"Sesgo de Optimismo en Salud", en:"Unrealistic Optimism / Health Optimism Bias", def:"Creemos que los problemas de salud graves 'le pasan a otros', no a nosotros.", ex:"'Fumo desde los 20 pero yo no voy a tener cáncer — siempre me he sentido bien.'", tip:"Las estadísticas de salud aplican independientemente de cómo te sientes hoy. El cuerpo guarda consecuencias que no notamos hasta que es tarde." },
+        { name:"Negligencia de la Tasa Base en Salud", en:"Base Rate Neglect in Health", def:"Ignoramos las probabilidades estadísticas de enfermedades cuando tenemos información específica del caso.", ex:"Buscar síntomas en internet y concluir que tienes la enfermedad rara que aparece primero, ignorando que lo más probable es algo común.", tip:"Los síntomas comunes suelen tener causas comunes. Consulta siempre con un médico antes de autodiagnosticarte con información de internet." },
+        { name:"Efecto de la Denominación en Riesgo", en:"Denominator Neglect in Health Decisions", def:"Las frecuencias relativas impactan más que los porcentajes aunque representen exactamente lo mismo.", ex:"'1 de cada 10 personas tiene efectos secundarios' genera más miedo que '10%', aunque sean idénticos.", tip:"Convierte siempre los datos de riesgo a la misma base numérica antes de evaluar su magnitud real." },
+        { name:"Sesgo de Probabilidad en Síntomas", en:"Availability Heuristic in Symptoms", def:"Después de leer o escuchar sobre una enfermedad, sobreestimamos la probabilidad de tenerla.", ex:"Después de ver un documental sobre Parkinson, cada pequeño temblor te hace pensar que lo tienes.", tip:"La frecuencia de que escuches sobre algo no refleja la frecuencia real de esa enfermedad en la población." },
+        { name:"Normalización del Dolor", en:"Pain Normalization Bias", def:"Normalizamos síntomas graduales porque el deterioro es tan lento que parece 'normal'.", ex:"'Siempre he tenido dolor de espalda, es normal para mí.' En realidad no es normal — te acostumbraste.", tip:"Compara con cómo te sentías hace 3-5 años, no con cómo te sientes normalmente hoy. El deterioro gradual es casi invisible en el presente." },
+      ],
+      "Decisiones de tratamiento": [
+        { name:"Sesgo de Naturalidad", en:"Appeal to Nature / Naturalistic Fallacy in Health", def:"Preferimos tratamientos 'naturales' sobre sintéticos aunque la evidencia científica diga lo contrario.", ex:"Tomar suplementos herbales sin evidencia sobre una condición seria y retrasar un tratamiento médico efectivo.", tip:"Natural no significa seguro. Muchos venenos son naturales. Muchos tratamientos efectivos son sintéticos. La evidencia clínica importa más que el origen." },
+        { name:"Sesgo de Autoridad Médica", en:"Authority Bias in Medicine", def:"Seguimos las recomendaciones médicas sin cuestionarlas ni buscar una segunda opinión.", ex:"Aceptar un diagnóstico grave de un solo médico sin buscar confirmación, aunque la decisión afecte tu vida.", tip:"Para diagnósticos serios o tratamientos invasivos, siempre busca una segunda opinión. La medicina no es exacta y los médicos también se equivocan." },
+        { name:"Efecto Nocebo", en:"Nocebo Effect", def:"Si esperamos que algo nos hará daño o tendrá efectos secundarios, es más probable que los experimentemos.", ex:"Leer la lista completa de efectos secundarios de un medicamento y experimentar muchos de ellos aunque sean raros.", tip:"Conoce los efectos secundarios más comunes e importantes, pero no anticipes cada síntoma posible. La expectativa de daño puede causarlo." },
+        { name:"Aplazamiento de Salud", en:"Present Bias in Healthcare", def:"Postergamos chequeos médicos preventivos porque el beneficio es futuro y el esfuerzo es presente.", ex:"'Me haré el chequeo anual el próximo mes.' El próximo mes nunca llega.", tip:"Agenda tus chequeos con la misma urgencia que una cita de trabajo importante. Ponlos en el calendario hoy, no 'cuando pueda'." },
+        { name:"Sesgo de Complacencia Post-síntoma", en:"Symptom Relief Bias", def:"Dejamos el tratamiento en cuanto mejoran los síntomas, antes de completarlo.", ex:"Dejar el antibiótico a los 3 días porque 'ya me siento mejor', creando resistencia bacteriana.", tip:"Los síntomas desaparecen antes que la infección o el problema de fondo. Completa siempre el tratamiento según indicación médica." },
+        { name:"Sesgo de Información Anecdótica en Salud", en:"Anecdotal Evidence Bias in Health", def:"Damos más peso a experiencias personales o casos conocidos que a estudios clínicos con miles de personas.", ex:"'Mi abuela fumó 80 años y murió sana a los 95' como argumento contra los riesgos del tabaco.", tip:"Los casos individuales no refutan estadísticas poblacionales. El efecto de una decisión de salud se mide en poblaciones, no en casos únicos." },
+      ],
+      "Hábitos y bienestar": [
+        { name:"Sesgo de Inmediatez en Salud", en:"Immediate Gratification in Health Behaviors", def:"Elegimos placer inmediato (comida, sedentarismo) sobre bienestar futuro aunque sepamos la diferencia.", ex:"'Mañana empiezo la dieta.' El mañana siempre es mañana.", tip:"Reduce la fricción para hábitos saludables (ropa de ejercicio lista la noche anterior) y aumenta la fricción para los no saludables." },
+        { name:"Efecto Halo en Alimentos", en:"Health Halo Effect", def:"Una etiqueta 'saludable' hace que sobreestimemos todos los atributos del producto y subestimemos las calorías.", ex:"Comer el triple de almendras porque 'son saludables' sin contar que tienen más calorías por gramo que muchos alimentos procesados.", tip:"'Saludable' no significa 'sin límite'. Lee siempre la información nutricional completa, no solo el claim del frente." },
+        { name:"Sesgo de Normalización del Estrés", en:"Stress Normalization", def:"Normalizamos niveles de estrés crónicos porque se instalan gradualmente y 'todos están estresados'.", ex:"'Estoy agotado y con ansiedad constante, pero eso es normal en mi trabajo.' No lo es — es una señal.", tip:"Compara tu nivel de energía y calidad de sueño con cómo eras hace 2 años. La normalización del deterioro es el mayor obstáculo para buscar ayuda." },
+      ],
+    }
+  },
+
+  con: {
+    color:'var(--con)', hex:'#1a5276', label:'Consumo',
+    cats: {
+      "Precios y valor percibido": [
+        { name:"Sesgo de Anclaje de Precio", en:"Price Anchoring", def:"El primer precio que vemos funciona como referencia que distorsiona nuestra percepción de los precios siguientes.", ex:"Una camisa 'rebajada' de $1,200 a $600 parece barata — aunque $600 siga siendo mucho para una camisa.", tip:"Pregúntate: ¿cuánto pagaría por esto si no hubiera visto el precio original? Ese es el valor real para ti." },
+        { name:"Efecto de Decoy", en:"Decoy Effect", def:"La presencia de una tercera opción 'señuelo' manipula nuestra preferencia entre las otras dos.", ex:"Palomitas chicas $40, medianas $90, grandes $95. Las medianas son el decoy — la gran parece 'casi igual de cara'.", tip:"Evalúa cada opción de forma independiente antes de compararlas. El señuelo está diseñado para hacer que una opción parezca mejor de lo que es." },
+        { name:"Contabilidad Mental del Consumidor", en:"Mental Accounting in Consumption", def:"Gastamos de forma diferente según la 'cuenta mental' de donde creemos que viene el dinero.", ex:"Gastar sin culpa el dinero del 'fondo de entretenimiento' aunque realmente necesitas ese dinero para otra cosa.", tip:"Todo el dinero es tuyo. No importa de qué 'cajita' viene — evalúa cada gasto contra tus prioridades totales." },
+        { name:"Efecto de la Gratuidad", en:"Zero Price Effect", def:"Las cosas gratis tienen un atractivo desproporcionado que va más allá de su valor real.", ex:"Hacer fila 45 minutos para obtener algo gratis que normalmente no comprarías por $20.", tip:"Calcula el costo real de 'gratis': ¿qué tiempo, esfuerzo o datos personales das a cambio? Raramente es realmente gratuito." },
+        { name:"Efecto de Precio y Calidad", en:"Price-Quality Heuristic", def:"Asumimos que lo más caro es de mejor calidad, incluso cuando no hay evidencia de ello.", ex:"Elegir el vino de $500 sobre el de $150 en una cena sin poder distinguirlos en una prueba ciega.", tip:"Busca reviews y pruebas ciegas antes de pagar el premium. En muchas categorías la diferencia de calidad no justifica la diferencia de precio." },
+      ],
+      "Publicidad y persuasión": [
+        { name:"Efecto de Exposición Mera", en:"Mere Exposure Effect", def:"Preferimos marcas simplemente por haberlas visto más veces, aunque no tengamos más información sobre ellas.", ex:"Elegir una marca de cereal en el supermercado solo porque la hemos visto en anuncios — sin comparar ingredientes.", tip:"'Me es familiar' no es lo mismo que 'es mejor'. Compara productos de forma activa y ciega cuando la categoría lo permita." },
+        { name:"Sesgo de Escasez", en:"Scarcity Bias", def:"Valoramos más las cosas cuando creemos que son escasas o que podemos perderlas.", ex:"'Solo quedan 2 habitaciones disponibles' o '¡Oferta termina en 10 minutos!' — aunque sean artificiales.", tip:"Espera 24 horas antes de comprar bajo urgencia artificial. Si el producto es genuinamente bueno, seguirá siendo bueno mañana." },
+        { name:"Prueba Social en Compras", en:"Social Proof in Purchasing", def:"Compramos lo que otros compran, especialmente en situaciones de incertidumbre.", ex:"'4.8 estrellas con 12,000 reviews' convierte una decisión difícil en fácil — aunque las reseñas puedan ser manipuladas.", tip:"Lee las reseñas negativas más detalladas. Revelan problemas reales que las calificaciones agregadas ocultan." },
+        { name:"Sesgo de Reciprocidad", en:"Reciprocity Bias", def:"Sentimos presión de devolver un favor o comprar cuando recibimos algo gratis (prueba, regalo, atención).", ex:"La muestra gratis de queso en el supermercado aumenta dramáticamente las ventas de ese queso por reciprocidad.", tip:"Acepta el regalo o muestra, pero separa mentalmente ese gesto de la decisión de compra. No estás obligado a comprar por recibir algo." },
+        { name:"Efecto de Encuadre en Precios", en:"Framing Effect in Pricing", def:"La misma información presentada diferente cambia la decisión de compra aunque el contenido sea idéntico.", ex:"'Ahorra $500 al año' vs 'cuesta $1.37 al día' — el segundo encuadre hace que la suscripción parezca ridículamente barata.", tip:"Convierte todos los precios a la misma unidad temporal antes de comparar. Mensual, anual y diario cuentan la misma historia diferente." },
+        { name:"Sesgo de Aversión a la Pérdida en Compras", en:"Loss Aversion in Retail", def:"Las campañas de 'no te quedes sin el tuyo' o 'no te pierdas esto' funcionan mejor que 'gana algo' por la misma razón.", ex:"'Pierdes $200 si no aprovechas esta oferta' activa más respuesta que 'ganas $200 si aprovechas esta oferta'.", tip:"Las marcas saben que las pérdidas duelen más que las ganancias. Cuando una campaña usa lenguaje de pérdida, estás siendo manipulado deliberadamente." },
+      ],
+      "Hábitos de consumo": [
+        { name:"Efecto de Dotación del Consumidor", en:"Endowment Effect in Consumption", def:"Valoramos más las cosas simplemente por poseerlas — pedir más para deshacernos de algo de lo que pagaríamos por comprarlo.", ex:"Poner en venta un jacket que ya no usas por $800 aunque si lo vieras en segunda mano no pagarías más de $200.", tip:"Pregúntate: ¿cuánto pagaría por esto si no fuera mío? La respuesta es su valor de mercado real." },
+        { name:"Sesgo de Completismo", en:"Completion Bias", def:"El deseo de completar colecciones o series nos lleva a comprar cosas que no necesitamos solo por 'completar'.", ex:"Comprar la temporada 3 de una serie que dejó de gustarte en la 2 'para tener el set completo'.", tip:"Evalúa cada ítem de forma independiente. La satisfacción de 'completar' es real pero costosa y temporaria." },
+        { name:"Sesgo de Conveniencia", en:"Convenience Bias", def:"Pagamos sustancialmente más por conveniencia aunque el beneficio real sea mínimo.", ex:"Comprar en la tienda más cercana que cuesta 40% más 'porque queda cerca' cuando la alternativa está a 10 minutos.", tip:"Cuantifica el valor real de la conveniencia. A veces vale la pena, pero habitualmente pagamos mucho por ahorrar poco tiempo." },
+      ],
+    }
+  },
+
+  soc: {
+    color:'var(--soc)', hex:'#6c3483', label:'Social & Digital',
+    cats: {
+      "Redes sociales y comparación": [
+        { name:"Comparación Social Hacia Arriba", en:"Social Comparison Theory (Upward)", def:"Nos comparamos principalmente con personas que percibimos como superiores en algún aspecto, generando insatisfacción.", ex:"Scrollear Instagram y sentirte mal con tu vida porque solo ves los mejores momentos de los demás, nunca los ordinarios.", tip:"Recuerda que consumes el highlight reel de todos. Compara tu realidad completa con la realidad completa de los demás, no con su versión editada." },
+        { name:"Efecto de Consenso Ilusorio Online", en:"False Consensus Online", def:"Las plataformas digitales hacen que las opiniones de tu burbuja parezcan ser las de 'todos', distorsionando la percepción de consenso.", ex:"'Todo el mundo piensa que X candidato es terrible.' — En realidad, todos en tu feed piensan eso. Fuera, la división es mucho mayor.", tip:"Busca activamente contenido de perspectivas diferentes a las tuyas. El algoritmo no te mostrará lo que no te gusta a menos que lo busques." },
+        { name:"Sesgo de Validación Digital", en:"Likes Validation Bias", def:"Medimos nuestro valor y el de nuestras ideas por la respuesta cuantificable que reciben online.", ex:"Publicar una foto y sentirte peor si recibe pocos likes, aunque nada en tu vida haya cambiado.", tip:"Los likes miden engagement del algoritmo, no valor real. Son optimizados para captar atención, no para reflejar apreciación genuina." },
+        { name:"Efecto de Red Social en Autoestima", en:"Social Media Self-Comparison Effect", def:"El uso frecuente de redes sociales activa comparación social que sistemáticamente daña la autoestima, especialmente en jóvenes.", ex:"Después de 30 minutos en Instagram, la satisfacción con el propio aspecto físico disminuye measurably.", tip:"Las plataformas están optimizadas para el tiempo de uso, no para tu bienestar. Periodos de descanso digital tienen efecto mensurable en el estado de ánimo." },
+      ],
+      "Desinformación y noticias": [
+        { name:"Sesgo de Confirmación Digital", en:"Confirmation Bias Online", def:"Los algoritmos aprenden nuestras preferencias y refuerzan nuestras creencias existentes mostrándonos más de lo mismo.", ex:"Si interactúas con contenido escéptico de vacunas, el algoritmo te mostrará más contenido escéptico de vacunas, aunque sea falso.", tip:"El algoritmo no valida verdad — optimiza engagement. Busca activamente fuentes que contradigan tus creencias antes de formarte una opinión." },
+        { name:"Efecto de Fluency en Noticias", en:"Processing Fluency / Illusory Truth Effect", def:"Creemos más fácilmente información que hemos visto o escuchado repetidamente, independientemente de su veracidad.", ex:"Un titular falso compartido miles de veces parece más verdadero que uno correcto con poca difusión.", tip:"La frecuencia de una afirmación no es evidencia de su verdad. Verifica siempre en fuentes primarias, especialmente antes de compartir." },
+        { name:"Sesgo de Negatividad en Noticias", en:"Negativity Bias in News Consumption", def:"Las noticias negativas captan más atención y son compartidas más que las positivas, distorsionando nuestra percepción del mundo.", ex:"Consumir noticias diariamente genera percepción de que el mundo es mucho más peligroso y caótico de lo que realmente es.", tip:"Calibra tu percepción del mundo con datos de largo plazo (mortalidad, pobreza, violencia) — casi todas las métricas muestran mejora histórica." },
+        { name:"Efecto de Tercera Persona", en:"Third-Person Effect", def:"Creemos que los medios y la publicidad influyen más en los demás que en nosotros mismos.", ex:"'Yo no me dejo manipular por el algoritmo — son los otros los que se dejan llevar.'", tip:"El sesgo del punto ciego es especialmente fuerte aquí. Todos somos influenciados por los medios. Reconocerlo es el primer paso para mitigarlo." },
+        { name:"Cámara de Eco", en:"Echo Chamber Effect", def:"Las redes sociales crean entornos donde solo escuchamos opiniones que refuerzan las nuestras, amplificando la polarización.", ex:"Pensar que el otro lado 'está completamente loco' porque nunca has leído sus argumentos en sus propias palabras.", tip:"Lee a los mejores exponentes de las posiciones contrarias, no las versiones de paja que circulan en tu propio círculo." },
+      ],
+      "Comportamiento social online": [
+        { name:"Desinhibición Online", en:"Online Disinhibition Effect", def:"El anonimato y la distancia digital hacen que nos comportemos de formas que nunca elegiríamos en persona.", ex:"Escribir comentarios agresivos o hirientes a personas que nunca insultarías cara a cara.", tip:"Pregúntate: ¿diría esto en persona, a la cara? Si la respuesta es no, reconsidera publicarlo." },
+        { name:"Sesgo de Granularidad en Texto", en:"Digital Misinterpretation Bias", def:"En comunicación escrita, perdemos el 70% de la información emocional que existe en la conversación presencial, generando malentendidos.", ex:"Un mensaje neutral sin emojis se interpreta como frío o molesto cuando en persona sería completamente normal.", tip:"En conversaciones importantes o con alta carga emocional, prefiere videollamada o llamada sobre texto. El tono se pierde en la escritura." },
+        { name:"Efecto del Espectador Digital", en:"Digital Bystander Effect", def:"En grupos de chat o comunidades online, asumimos que alguien más responderá o actuará, igual que en físico.", ex:"Un mensaje importante en un grupo de 30 personas queda sin respuesta porque cada uno asume que otro responderá.", tip:"Si un mensaje en un grupo requiere atención y nadie responde, actúa tú. La responsabilidad difusa es la norma en grupos grandes." },
+        { name:"Sesgo de Completismo en Contenido", en:"Content Completion Bias", def:"Los algoritmos explotan nuestra tendencia a querer 'terminar' series, episodios o feeds, generando consumo que no elegimos conscientemente.", ex:"'Solo veo un episodio más' a las 2am, aunque mañana tienes que madrugar.", tip:"Pon límites de tiempo en aplicaciones de streaming y redes. El diseño de estas plataformas está optimizado para eliminar tu capacidad de parar." },
+        { name:"Memoria Transactiva Digital", en:"Digital Transactive Memory", def:"Hemos externalizado tanto nuestra memoria a los dispositivos que perdemos capacidad de retener información sin acceso digital.", ex:"No saber el número de teléfono de tu pareja o de tus padres porque 'está en el celular'.", tip:"Hay información que vale la pena guardar en tu propia memoria. La dependencia total de dispositivos tiene costos cognitivos reales." },
+      ],
+    }
+  }
+};
+
+// ══════════════════════════
+// QUIZ QUESTIONS
+// ══════════════════════════
+const QQ = [
+  // Relaciones
+  { dom:"❤️ Relaciones", col:"var(--rel)",
+    scene:"Llegas tarde a la cena de cumpleaños de tu amigo por un embotellamiento terrible. Cuando él llega tarde a tu boda semanas después, piensas: 'Siempre tan desconsiderado, así es él.' ¿Qué sesgo opera?",
+    ask:"¿Cuál es el nombre de este sesgo?",
+    opts:["Efecto Halo","Error de Atribución Fundamental","Sesgo de Retrospectiva","Efecto del Falso Consenso"],
+    ok:1, expl:"El <strong>Error de Atribución Fundamental</strong>: tus retrasos los explicas por circunstancias externas (el tráfico), pero el retraso ajeno lo atribuyes al carácter de la persona. Aplicamos consistentemente más generosidad a nuestros propios errores.", tip:"Antes de juzgar conducta ajena, pregúntate: ¿qué circunstancia podría explicar esto? Dale el mismo beneficio que te das a ti." },
+
+  { dom:"❤️ Relaciones", col:"var(--rel)",
+    scene:"Conociste a alguien que te parece muy atractivo/a. Antes de tener su primera conversación real, ya lo imaginas inteligente, divertido, honesto y con excelente sentido del humor. ¿Qué sesgo explica esto?",
+    ask:"¿Cuál es el sesgo que opera aquí?",
+    opts:["Sesgo de Proyección","Efecto Halo en el Amor","Efecto de la Luna de Miel","Sesgo Optimista"],
+    ok:1, expl:"El <strong>Efecto Halo</strong>: la atracción física genera una impresión globalmente positiva que 'ilumina' todas las demás dimensiones imaginadas. Virtudes que no has verificado se proyectan automáticamente a partir de una sola característica positiva.", tip:"Distingue atracción física de virtudes de carácter. Date tiempo y conversaciones reales antes de proyectar cualidades no verificadas." },
+
+  { dom:"❤️ Relaciones", col:"var(--rel)",
+    scene:"Cuando tu pareja está molesta, le das espacio porque eso es lo que tú necesitas cuando estás molesto. Tu pareja, sin embargo, necesita exactamente lo contrario: quiere hablar inmediatamente. ¿Qué sesgo genera el malentendido?",
+    ask:"¿Cómo se llama el sesgo que lleva a asumir que el otro necesita lo mismo que tú?",
+    opts:["Error de Atribución Fundamental","Mente del Lector","Sesgo de Proyección","Efecto del Falso Consenso"],
+    ok:2, expl:"El <strong>Sesgo de Proyección</strong>: asumimos que los demás sienten, quieren y necesitan lo mismo que nosotros. Proyectamos nuestras propias preferencias emocionales en las personas cercanas sin verificar si son compartidas.", tip:"Pregunta directamente qué necesita la otra persona. 'Cuando estás así, ¿qué necesitas de mí?' es la pregunta que más malentendidos resuelve." },
+
+  { dom:"❤️ Relaciones", col:"var(--rel)",
+    scene:"Tú y tu pareja discuten sobre quién hace más en casa. Ambos están convencidos de que 'siempre ceden ellos' y de que el otro 'no reconoce lo que hago'. Extrañamente, ambos tienen razón en algo. ¿Qué sesgo opera?",
+    ask:"¿Qué nombre recibe este fenómeno en conflictos relacionales?",
+    opts:["Sesgo de Victimización","Efecto del Falso Consenso","Sesgo de Negatividad","Cámara de Eco Relacional"],
+    ok:0, expl:"El <strong>Sesgo de Victimización</strong>: en conflictos, cada parte recuerda más sus propios sacrificios y el daño recibido que el que causó. Es un sesgo de memoria selectiva aplicado a relaciones. Ambos son 'víctimas' desde su perspectiva porque ambos recuerdan selectivamente.", tip:"Haz una lista real de lo que aportas Y de lo que aporta la otra persona. El ejercicio equilibrado casi siempre sorprende a ambas partes." },
+
+  // Decisiones
+  { dom:"🧭 Decisiones", col:"var(--dec)",
+    scene:"Llevas 6 años en una empresa que te hace infeliz. Cuando piensas en renunciar, tu primer argumento en contra es: 'He dado demasiado tiempo a este lugar para irme ahora.' ¿Qué sesgo te está reteniendo?",
+    ask:"¿Cuál es el nombre de este sesgo?",
+    opts:["Sesgo del Status Quo","Aversión a la Pérdida","Falacia del Costo Hundido","Ilusión de Control"],
+    ok:2, expl:"La <strong>Falacia del Costo Hundido</strong>: los 6 años ya fueron — no son recuperables independientemente de lo que decidas hoy. La decisión correcta solo debe considerar: ¿qué quiero para mi futuro? Los años pasados no son argumento para seguir ni para irse.", tip:"Pregúntate: si llegara nuevo a esta empresa mañana, sabiendo todo lo que sé, ¿elegiría quedarme? Esa respuesta no está contaminada por el costo hundido." },
+
+  { dom:"🧭 Decisiones", col:"var(--dec)",
+    scene:"Recibes un aguinaldo de $15,000. Ese mismo mes necesitas $15,000 para un gasto médico urgente. Pero usas el aguinaldo en un viaje porque 'es dinero extra' y pides prestado para la deuda. ¿Qué sesgo opera?",
+    ask:"¿Por qué tratas el aguinaldo diferente al dinero regular?",
+    opts:["Aversión a la Pérdida","Contabilidad Mental","Descuento Hiperbólico","Efecto de Dotación"],
+    ok:1, expl:"La <strong>Contabilidad Mental</strong>: el aguinaldo fue etiquetado mentalmente como 'extra' y por tanto disponible para gastos que no harías con el salario. Pero $15,000 de aguinaldo = $15,000 de cualquier otra fuente. El dinero es perfectamente fungible.", tip:"Antes de gastar cualquier ingreso 'especial', pregúntate: ¿cuáles son mis prioridades financieras este mes? El origen del dinero no cambia esas prioridades." },
+
+  { dom:"🧭 Decisiones", col:"var(--dec)",
+    scene:"Siempre has pensado que tus fracasos profesionales se deben a circunstancias externas (jefes malos, mercado difícil, mala suerte) y tus éxitos a tu talento y esfuerzo. ¿Cuál es este sesgo?",
+    ask:"¿Cómo se llama este patrón de atribución asimétrica?",
+    opts:["Error de Atribución Fundamental","Sesgo de Retrospectiva","Sesgo de Autocomplacencia","Ilusión de Superioridad"],
+    ok:2, expl:"El <strong>Sesgo de Autocomplacencia (Self-serving Bias)</strong>: atribuimos éxitos a capacidades internas y fracasos a factores externos. Es un mecanismo de protección del ego que distorsiona el aprendizaje — si nunca fui yo quien falló, nunca aprendo qué cambiar.", tip:"Busca el factor interno en tus fracasos y el externo en tus éxitos. La verdad objetiva suele estar en el medio de ambas versiones." },
+
+  { dom:"🧭 Decisiones", col:"var(--dec)",
+    scene:"Estás planeando remodelar tu casa. Estimas que tardará 3 meses y costará $80,000. Alguien que ha remodelado muchas casas te dice: 'Todos piensan eso — termina siendo el doble de tiempo y de costo.' ¿Qué sesgo describes al planear?",
+    ask:"¿Cuál es el nombre de este sesgo de estimación sistemáticamente optimista?",
+    opts:["Exceso de Confianza","Sesgo Optimista","Falacia de la Planificación","Ilusión de Control"],
+    ok:2, expl:"La <strong>Falacia de la Planificación</strong>: sistemáticamente subestimamos tiempo, costo y esfuerzo de proyectos futuros mientras sobreestimamos beneficios. Este sesgo afecta igual a expertos que a novatos en su propio trabajo. El remedio es la tasa base externa.", tip:"Para cualquier estimación, pregunta: ¿cuánto tardaron proyectos similares a este? La historia de otros es mejor predictor que tu plan propio." },
+
+  // Salud
+  { dom:"🩺 Salud", col:"var(--sal)",
+    scene:"Llevas 15 años con dolor de cabeza frecuente. Ya no lo mencionas al médico porque 'siempre ha sido así para mí'. Tu médico, al enterarse, te dice que eso no es normal. ¿Qué sesgo te impidió reportarlo antes?",
+    ask:"¿Cuál es el nombre de este sesgo relacionado con síntomas graduales?",
+    opts:["Sesgo de Optimismo en Salud","Normalización del Dolor","Negligencia de la Tasa Base","Aplazamiento de Salud"],
+    ok:1, expl:"La <strong>Normalización del Dolor</strong>: cuando un síntoma aparece gradualmente, el cerebro recalibra su umbral de 'normal'. Lo que al principio sería reportable ya no lo parece porque te acostumbraste. El deterioro gradual es casi invisible en el presente.", tip:"Compara cómo te sientes hoy con cómo te sentías hace 3-5 años, no con cómo te sientes normalmente ahora. El punto de referencia correcto es el pasado, no el presente." },
+
+  { dom:"🩺 Salud", col:"var(--sal)",
+    scene:"Buscas en internet por qué te duele la cabeza. Primero aparece 'tumor cerebral'. El artículo detalla los síntomas y muchos coinciden vagamente con lo que sientes. Empiezas a creer que puedes tener un tumor. ¿Qué sesgo opera?",
+    ask:"¿Cuál es el sesgo que te lleva a este autodiagnóstico?",
+    opts:["Sesgo de Optimismo Inverso","Sesgo de Disponibilidad + Negligencia de Tasa Base","Efecto Nocebo","Sesgo de Autoridad Médica"],
+    ok:1, expl:"El <strong>Sesgo de Disponibilidad</strong>: el tumor cerebral es el primero que aparece y por tanto el más 'disponible' mentalmente. La <strong>Negligencia de la Tasa Base</strong>: la causa más común del dolor de cabeza es tensión o deshidratación — mucho más probable que un tumor. Internet muestra lo raro primero porque es más llamativo.", tip:"Los síntomas comunes tienen causas comunes. Consulta a un médico antes de autodiagnosticarte. Los resultados de búsqueda están optimizados para llamar tu atención, no para darte probabilidades reales." },
+
+  { dom:"🩺 Salud", col:"var(--sal)",
+    scene:"El médico te receta un antibiótico por 7 días. A los 3 días ya te sientes perfectamente bien. Decides dejar de tomarlo porque 'ya no lo necesitas'. ¿Qué sesgo te lleva a esta decisión?",
+    ask:"¿Cuál es el sesgo que opera cuando dejamos tratamientos ante la mejora de síntomas?",
+    opts:["Sesgo de Inmediatez en Salud","Sesgo de Naturalidad","Sesgo de Complacencia Post-síntoma","Aplazamiento de Salud"],
+    ok:2, expl:"El <strong>Sesgo de Complacencia Post-síntoma</strong>: los síntomas desaparecen antes de que la infección esté realmente eliminada. El bienestar inmediato nos da una señal falsa de que el problema está resuelto cuando no lo está. Además crea resistencia bacteriana.", tip:"El tratamiento médico está diseñado para el problema de fondo, no para los síntomas. Complétalo siempre según indicación, aunque te sientas bien." },
+
+  // Consumo
+  { dom:"🛒 Consumo", col:"var(--con)",
+    scene:"Ves una chamarra con precio original $3,000 y precio de oferta $1,500. Te parece una ganga. Compras la chamarra aunque normalmente no gastarías más de $600 en ropa. ¿Qué sesgo te llevó a comprarla?",
+    ask:"¿Cuál es el sesgo principal que hizo que el precio pareciera una 'ganga'?",
+    opts:["Efecto de Escasez","Sesgo de Anclaje de Precio","Contabilidad Mental del Consumidor","Prueba Social en Compras"],
+    ok:1, expl:"El <strong>Sesgo de Anclaje de Precio</strong>: el precio original $3,000 funcionó como ancla. Cualquier precio por debajo parece una ganga comparado con esa referencia, aunque la referencia misma sea arbitraria o inflada. La pregunta correcta es: ¿cuánto vale esto para mí independientemente del precio original?", tip:"Pregúntate: ¿cuánto pagaría si nunca hubiera visto el precio 'original'? Si la respuesta es mucho menos que el precio de oferta, el ancla está funcionando en tu contra." },
+
+  { dom:"🛒 Consumo", col:"var(--con)",
+    scene:"En el cine, las opciones son: palomitas chicas $40, medianas $90, grandes $100. Compras las grandes porque 'por $10 más, casi igual que las medianas'. Las chicas quedan olvidadas. ¿Qué estrategia de precio opera sobre ti?",
+    ask:"¿Qué nombre recibe esta táctica donde una opción 'señuelo' manipula la elección?",
+    opts:["Efecto de Escasez","Sesgo de Anclaje de Precio","Efecto de Decoy","Efecto de la Gratuidad"],
+    ok:2, expl:"El <strong>Efecto Decoy (Señuelo)</strong>: las medianas no están ahí para que las compres — están para hacer que las grandes parezcan la opción obvia al ser 'casi igual de caras'. Sin el señuelo, la comparación sería chicas vs grandes, y las grandes parecerían caras.", tip:"Evalúa cada opción de forma independiente antes de compararlas entre sí. Pregunta: ¿necesito este tamaño? No: ¿cuál es la mejor relación precio-cantidad." },
+
+  { dom:"🛒 Consumo", col:"var(--con)",
+    scene:"Una tienda online muestra: 'Solo quedan 3 en stock. 47 personas están viendo esto ahora. ¡Oferta termina en 00:23:45!' Sientes urgencia de comprar aunque llevas semanas sin decidir. ¿Qué sesgo están explotando?",
+    ask:"¿Qué nombre recibe el sesgo que hace más atractivo lo que puede escasear?",
+    opts:["Efecto de Exposición Mera","Sesgo de Escasez","Prueba Social en Compras","Efecto de Encuadre en Precios"],
+    ok:1, expl:"El <strong>Sesgo de Escasez</strong>: valoramos más las cosas cuando creemos que son limitadas o que podemos perderlas. Las tiendas online crean escasez artificial deliberadamente. '3 en stock' puede ser falso. El contador puede reiniciarse. La urgencia está diseñada para que decidas con emoción, no con razón.", tip:"Regla de 24 horas: espera un día antes de comprar bajo urgencia artificial. Si el producto es genuinamente bueno, seguirá disponible y siendo bueno mañana." },
+
+  { dom:"🛒 Consumo", col:"var(--con)",
+    scene:"Te dieron una muestra gratuita de perfume en una tienda. La vendedora fue muy amable y te dio mucho tiempo. Al final, aunque el perfume no era tu primera opción, lo compraste. ¿Por qué?",
+    ask:"¿Qué sesgo te hizo sentir que 'debías' comprar algo después de recibir atención y muestras gratis?",
+    opts:["Sesgo de Reciprocidad","Efecto de Exposición Mera","Prueba Social en Compras","Sesgo de Escasez"],
+    ok:0, expl:"El <strong>Sesgo de Reciprocidad</strong>: cuando recibimos algo (tiempo, atención, muestra), sentimos presión social e interna de corresponder. Las ventas personales explotan este mecanismo deliberadamente. El tiempo de la vendedora y la muestra son inversiones calculadas para activar tu reciprocidad.", tip:"Acepta el regalo o la muestra, pero reconoce conscientemente que no estás en deuda. La atención comercial es una estrategia, no un favor personal." },
+
+  // Social & Digital
+  { dom:"📱 Social & Digital", col:"var(--soc)",
+    scene:"Scrolleas Instagram por 20 minutos y de alguna forma terminas sintiéndote peor con tu físico, tu casa y tus vacaciones aunque nada en tu vida cambió. ¿Qué mecanismo psicológico opera?",
+    ask:"¿Qué sesgo explica este deterioro de bienestar causado por el scroll?",
+    opts:["Cámara de Eco","Efecto del Falso Consenso Online","Comparación Social Hacia Arriba","Sesgo de Negatividad en Noticias"],
+    ok:2, expl:"La <strong>Comparación Social Hacia Arriba</strong>: te comparas con personas que percibas como 'superiores' en algún aspecto (apariencia, viajes, casa). Las redes amplifican esto porque solo muestras los mejores momentos de todos, creando una base de comparación artificialmente alta.", tip:"Lo que ves en redes es el 1% mejor de la vida de cada persona. Estás comparando tu realidad completa con el highlight reel editado de otros." },
+
+  { dom:"📱 Social & Digital", col:"var(--soc)",
+    scene:"Interactúas principalmente con contenido político que coincide con tus views. Cada vez crees más que 'el otro lado está completamente equivocado y es imposible razonar con ellos'. ¿Qué fenómeno digital opera?",
+    ask:"¿Cómo se llama el entorno digital donde solo escuchamos lo que ya creemos?",
+    opts:["Efecto de Tercera Persona","Cámara de Eco","Efecto de Fluency en Noticias","Sesgo de Confirmación Digital"],
+    ok:1, expl:"La <strong>Cámara de Eco</strong> amplificada por el <strong>Sesgo de Confirmación Digital</strong>: el algoritmo aprende que te gusta ese contenido y te muestra más. Ves solo las versiones más extremas del otro lado. Sin acceso a los mejores argumentos contrarios, la polarización es inevitable.", tip:"Lee a los mejores representantes de las posiciones opuestas, no las versiones de paja que circulan en tu propio feed. La realidad siempre es más matizada." },
+
+  { dom:"📱 Social & Digital", col:"var(--soc)",
+    scene:"Un titular aparece en tu feed por tercera vez esta semana: 'El 5G causa cáncer'. Aunque la primera vez lo dudaste, ahora ya no estás tan seguro. ¿Qué efecto psicológico opera?",
+    ask:"¿Qué nombre recibe el efecto donde la repetición aumenta la percepción de veracidad?",
+    opts:["Efecto de Exposición Mera","Efecto de Fluency / Verdad Ilusoria","Sesgo de Disponibilidad","Prueba Social en Noticias"],
+    ok:1, expl:"El <strong>Efecto de Verdad Ilusoria (Illusory Truth Effect)</strong>: el cerebro usa la facilidad con que recuperamos información como señal de su verdad. Lo que hemos visto repetidamente se procesa más fácilmente — y lo fácil se confunde con lo verdadero. La desinformación funciona por repetición deliberada.", tip:"La frecuencia con que escuchas algo no es evidencia de su veracidad. Antes de cambiar una opinión, verifica en fuentes primarias, no en cuántas veces lo has visto." },
+
+  { dom:"📱 Social & Digital", col:"var(--soc)",
+    scene:"Escribes un mensaje en WhatsApp: 'Está bien.' Sin emojis. Quien lo recibe lee 'enojo pasivo-agresivo'. Tú querías decir literalmente que está bien. ¿Qué sesgo cognitivo opera en la interpretación?",
+    ask:"¿Cuál es el sesgo que lleva a malinterpretar el tono en comunicación escrita?",
+    opts:["Mente del Lector","Sesgo de Proyección","Sesgo de Granularidad en Texto","Efecto de Tercera Persona"],
+    ok:2, expl:"El <strong>Sesgo de Granularidad en Texto (Digital Misinterpretation Bias)</strong>: en comunicación escrita perdemos el 70% de la información emocional presente en conversación presencial — tono, expresión facial, postura. El receptor llena ese vacío con sus propias proyecciones e interpretaciones.", tip:"En conversaciones con carga emocional o muy importantes, prefiere llamada o videollamada sobre texto. Y cuando envíes mensajes neutros en contextos sensibles, un emoji puede eliminar ambigüedad." },
+
+  // Mixtos avanzados
+  { dom:"❤️ Relaciones", col:"var(--rel)",
+    scene:"Terminaste una relación de 4 años hace 6 meses. Cuando la recuerdas, casi todo te parece malo — las peleas, los problemas, lo incompatibles que eran. Tu diario de ese tiempo, sin embargo, muestra muchas entradas felices. ¿Qué sesgo editó tu recuerdo?",
+    ask:"¿Cómo se llama el sesgo que reescribe el pasado para ser consistente con el estado presente?",
+    opts:["Sesgo de Retrospectiva","Reescritura de la Historia Relacional","Regla Pico-Final","Sesgo de Deseabilidad"],
+    ok:1, expl:"La <strong>Reescritura de la Historia Relacional</strong>: cuando una relación termina mal, el cerebro reescribe el pasado para hacerlo consistente con la conclusión presente. El estado emocional actual actúa como filtro que colorea todos los recuerdos. Tu diario, escrito en el momento, es más confiable que tu memoria actual.", tip:"No tomes decisiones sobre relaciones futuras basadas en la versión editada del pasado. Tu diario o fotos de la época son más objetivos que tu recuerdo presente." },
+
+  { dom:"🧭 Decisiones", col:"var(--dec)",
+    scene:"Tu mejor amigo te dice que vas a adorar el nuevo restaurante al que llevarte. Llegas con expectativas altísimas. La comida es buena pero no espectacular. Salís decepcionado aunque el restaurante tiene 4.7 estrellas. ¿Qué sesgo opera?",
+    ask:"¿Qué sesgo genera decepción cuando la realidad no iguala una expectativa inflada?",
+    opts:["Sesgo de Anclaje","Sesgo de Impacto Afectivo","Efecto de Contraste por Expectativa","Sesgo de Representatividad"],
+    ok:2, expl:"El <strong>Efecto de Contraste</strong>: no evaluamos la experiencia en términos absolutos sino en relación a la expectativa. Un restaurante objetivamente excelente genera decepción cuando la expectativa es 'la mejor comida de tu vida'. La experiencia se juzga contra la expectativa, no contra un estándar absoluto.", tip:"Las recomendaciones hiperbólicas inflan las expectativas hasta hacer que lo bueno parezca mediocre. Calibra: 'está muy bueno' es diferente a 'cambiará tu vida'." },
+
+  { dom:"🛒 Consumo", col:"var(--con)",
+    scene:"Llevas pensando en un sofá nuevo durante 3 semanas. Un anuncio online te dice 'Solo hasta este domingo — precio especial'. Compras el sofá ese día aunque no habías tomado la decisión. ¿Qué combinación de sesgos operó?",
+    ask:"¿Qué dos sesgos combinados llevaron a la compra impulsiva bajo urgencia artificial?",
+    opts:["Efecto Halo + Sesgo de Anclaje","Sesgo de Escasez + Sesgo de Acción bajo Presión","Efecto Decoy + Sesgo de Reciprocidad","Contabilidad Mental + Sesgo de Disponibilidad"],
+    ok:1, expl:"El <strong>Sesgo de Escasez</strong> (oferta limitada en tiempo) crea urgencia artificial. El <strong>Sesgo de Acción bajo Presión</strong>: bajo urgencia, el cerebro prefiere actuar a esperar, aunque la espera podría llevar a mejor decisión. La combinación es especialmente poderosa porque la presión de tiempo reduce la capacidad de análisis.", tip:"Regla de oro: ante urgencia de compra, espera 24 horas. Una decisión que no sobrevive un día de espera no es urgente — es impulsiva." },
+
+  { dom:"🩺 Salud", col:"var(--sal)",
+    scene:"Tu abuela vivió hasta los 95 años fumando y bebiendo. Usas este ejemplo para no tomar en serio los consejos de tu médico sobre hábitos. ¿Cuál es el error cognitivo?",
+    ask:"¿Qué sesgo te lleva a basar una decisión de salud en un caso individual en vez de estadísticas?",
+    opts:["Sesgo de Optimismo en Salud","Sesgo de Información Anecdótica","Negligencia de la Tasa Base","Efecto de la Denominación"],
+    ok:1, expl:"El <strong>Sesgo de Información Anecdótica</strong>: el caso de la abuela es estadísticamente posible pero no refuta que fumar causa cáncer en poblaciones grandes. Un caso individual —especialmente uno memorable como una abuela longeva— no tiene peso estadístico contra estudios de millones de personas.", tip:"Los casos individuales no refutan estadísticas poblacionales. La abuela fumadora existe; los millones que desarrollaron cáncer también. La medicina trabaja con probabilidades, no con certezas." },
+
+  { dom:"📱 Social & Digital", col:"var(--soc)",
+    scene:"Recibes un artículo sobre el 5G y lo compartes sin leerlo completo porque el titular coincide perfectamente con lo que ya piensas. Dos días después te enteras de que era falso. ¿Qué sesgo principal operó?",
+    ask:"¿Cuál es el sesgo que nos lleva a consumir y compartir información que confirma lo que ya creemos?",
+    opts:["Efecto de Fluency","Prueba Social en Noticias","Sesgo de Confirmación Digital","Desinhibición Online"],
+    ok:2, expl:"El <strong>Sesgo de Confirmación Digital</strong>: buscamos, consumimos y compartimos información que confirma nuestras creencias existentes. El titular fue suficiente — no necesitaste leer más porque ya 'concordaba'. Este patrón es el motor principal de la desinformación: la gente no comparte mentiras, comparte lo que confirma lo que ya cree.", tip:"Antes de compartir: ¿leíste el artículo completo? ¿Verificaste en otra fuente? ¿Lo compartirías si contradijera tu posición? Si las respuestas no son todas sí, no compartas." },
+];
+
+// ══════════════════════════
+// RENDER ENGINE
+// ══════════════════════════
+function buildDomain(id) {
+  const D = DOMAINS[id];
+  const cats = D.cats;
+  let total = 0;
+  const grid = document.getElementById('g-'+id);
+  const fb   = document.getElementById('fb-'+id);
+  const bt   = document.getElementById('bt-'+id);
+
+  // Filter buttons
+  const allB = mkBtn('Todas', true, () => filterD(id, null, allB));
+  fb.appendChild(allB);
+  Object.keys(cats).forEach(cat => {
+    const b = mkBtn(cat, false, () => filterD(id, cat, b));
+    fb.appendChild(b);
+  });
+
+  Object.entries(cats).forEach(([cat, biases]) => {
+    total += biases.length;
+    const sec = document.createElement('div');
+    sec.className = 'cat-block'; sec.dataset.cat = cat;
+    const tag = document.createElement('div');
+    tag.className = 'cat-tag';
+    tag.style.color = D.hex;
+    tag.style.borderColor = D.hex + '44';
+    tag.style.background = D.hex + '0d';
+    tag.textContent = cat;
+    sec.appendChild(tag);
+    const bg = document.createElement('div');
+    bg.className = 'bg';
+    biases.forEach((b, i) => {
+      const card = document.createElement('div');
+      card.className = 'bc';
+      card.style.animationDelay = i*0.04+'s';
+      card.innerHTML = `
+        <div class="bc-num">#${b.n||''}</div>
+        <div class="bc-en">${b.en}</div>
+        <div class="bc-top"><div class="bc-name">${b.name}</div></div>
+        <div class="bc-def">${b.def}</div>
+        <div class="bc-more">
+          <div class="bc-lbl">Ejemplo cotidiano</div>
+          <div class="bc-txt">${b.ex}</div>
+          <div class="bc-lbl">Cómo contrarrestarlo</div>
+          <div class="bc-txt">${b.tip}</div>
+        </div>
+        <div class="bc-hint">Toca para expandir →</div>`;
+      card.addEventListener('mouseenter', () => { if(!card.classList.contains('open')) card.style.borderColor = D.hex+'66'; });
+      card.addEventListener('mouseleave', () => { if(!card.classList.contains('open')) card.style.borderColor = ''; });
+      card.onclick = () => {
+        card.classList.toggle('open');
+        card.querySelector('.bc-hint').textContent = card.classList.contains('open') ? 'Toca para cerrar ↑' : 'Toca para expandir →';
+        card.style.borderColor = card.classList.contains('open') ? D.hex+'99' : '';
+      };
+      bg.appendChild(card);
+    });
+    sec.appendChild(bg);
+    grid.appendChild(sec);
+  });
+  bt.textContent = total + ' sesgos en este dominio';
+  return total;
+}
+
+function mkBtn(label, active, fn) {
+  const b = document.createElement('button');
+  b.className = 'fbtn' + (active?' on':'');
+  b.textContent = label; b.onclick = fn;
+  return b;
+}
+
+function filterD(id, cat, btn) {
+  document.querySelectorAll('#fb-'+id+' .fbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('#g-'+id+' .cat-block').forEach(s => {
+    s.style.display = (!cat || s.dataset.cat === cat) ? '' : 'none';
+  });
+}
+
+const tots = ['rel','dec','sal','con','soc'].map(buildDomain);
+tots.forEach((t,i) => {
+  document.getElementById('s'+(i+1)).textContent = t;
+  document.getElementById('hc'+(i+1)).textContent = t + ' sesgos';
+});
+document.getElementById('s0').textContent = tots.reduce((a,b)=>a+b,0);
+
+// ══════════════════════════
+// NAVIGATION
+// ══════════════════════════
+function go(id, el) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if (el) el.classList.add('active');
+  else document.querySelector('.ntab.t-'+id)?.classList.add('active');
+}
+
+// ══════════════════════════
+// QUIZ LOGIC
+// ══════════════════════════
+let qMode=0, qList=[], qIdx=0, qAns=[], qDone=false;
+
+const DOMAIN_FILTERS = [
+  ()=>QQ,
+  ()=>QQ.filter(q=>q.dom.startsWith('❤️')),
+  ()=>QQ.filter(q=>q.dom.startsWith('🧭')),
+  ()=>QQ.filter(q=>q.dom.startsWith('🩺')),
+  ()=>QQ.filter(q=>q.dom.startsWith('🛒')),
+  ()=>QQ.filter(q=>q.dom.startsWith('📱')),
+];
+
+function selM(m) {
+  qMode=m;
+  for(let i=0;i<6;i++) document.getElementById('qm'+i)?.classList.toggle('sel', i===m);
+}
+
+function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+
+function startQ(){
+  const pool = DOMAIN_FILTERS[qMode]();
+  qList = shuffle(pool).slice(0, Math.min(pool.length, qMode===0?25:10));
+  qIdx=0; qAns=[]; qDone=false;
+  document.getElementById('qs-start').style.display='none';
+  document.getElementById('qs-res').style.display='none';
+  document.getElementById('qs-q').style.display='block';
+  renderQ();
+}
+
+function renderQ(){
+  qDone=false;
+  const q=qList[qIdx], tot=qList.length;
+  document.getElementById('qpf').style.width=`${(qIdx/tot)*100}%`;
+  document.getElementById('qnum').textContent=`${qIdx+1}/${tot}`;
+  document.getElementById('qdomain').textContent=q.dom;
+  const L=['A','B','C','D'];
+  document.getElementById('qcard').innerHTML=`
+    <div class="q-domain-tag" style="color:${q.col}">${q.dom}</div>
+    <div class="q-scene">${q.scene}</div>
+    <div class="q-ask">${q.ask}</div>
+    <div class="q-opts">
+      ${q.opts.map((o,i)=>`
+        <button class="qopt" onclick="ansQ(${i})" id="qo${i}">
+          <span class="ql">${L[i]}</span><span>${o}</span>
+        </button>`).join('')}
+    </div>
+    <div class="qfb" id="qfb">
+      <div class="qfb-t" id="qfbt"></div>
+      <p id="qfbp"></p>
+      <div class="qfb-tip" id="qfbtip"></div>
+      <div class="qfb-ref" id="qfbref"></div>
+    </div>
+    <button class="btn-next" id="qbn" onclick="nextQ()">
+      ${qIdx<qList.length-1?'Siguiente →':'Ver mis resultados →'}
+    </button>`;
+}
+
+function ansQ(i){
+  if(qDone)return; qDone=true;
+  const q=qList[qIdx], ok=i===q.ok;
+  qAns.push({q,i,ok});
+  document.querySelectorAll('.qopt').forEach((el,j)=>{
+    el.classList.add('dis');
+    if(j===q.ok) el.classList.add('ok');
+    else if(j===i&&!ok) el.classList.add('no');
+  });
+  const fb=document.getElementById('qfb');
+  fb.style.display='block';
+  fb.className='qfb '+(ok?'ok':'no');
+  document.getElementById('qfbt').textContent=ok?'✓ Correcto':'✗ Respuesta: '+['A','B','C','D'][q.ok];
+  document.getElementById('qfbp').innerHTML=q.expl;
+  document.getElementById('qfbtip').textContent='💡 '+q.tip;
+  document.getElementById('qbn').style.display='block';
+}
+
+function nextQ(){
+  qIdx++;
+  if(qIdx>=qList.length) showRes();
+  else renderQ();
+}
+
+function showRes(){
+  document.getElementById('qs-q').style.display='none';
+  document.getElementById('qs-res').style.display='block';
+  const score=qAns.filter(a=>a.ok).length, tot=qAns.length;
+  document.getElementById('r-n').textContent=score;
+  document.getElementById('r-d').textContent=`de ${tot} correctas`;
+  const p=score/tot;
+  let t,d;
+  if(p>=.88){t="Mente muy calibrada";d="Reconoces los sesgos en escenarios reales con alta precisión. Recuerda: conocerlos no los elimina — pero sí te da un segundo antes de decidir.";}
+  else if(p>=.72){t="Buen nivel de autoconciencia";d="Sólido en la mayoría de los dominios. Hay algunos sesgos específicos que se te escapan aún — revisa los que fallaste.";}
+  else if(p>=.52){t="En desarrollo";d="Reconoces los sesgos clásicos pero los más sutiles o combinados te esquivan. El catálogo completo vale la pena explorar.";}
+  else{t="El cerebro te gana por ahora";d="Los sesgos son difíciles de detectar porque se sienten como pensamiento normal. Este resultado señala exactamente dónde enfocar el estudio.";}
+  document.getElementById('r-t').textContent=t;
+  document.getElementById('r-desc').textContent=d;
+
+  const ds={};
+  qAns.forEach(a=>{
+    const k=a.q.dom;
+    if(!ds[k]) ds[k]={ok:0,tot:0,col:a.q.col};
+    ds[k].tot++; if(a.ok) ds[k].ok++;
+  });
+  let html='';
+  Object.entries(ds).forEach(([k,s])=>{
+    const p=Math.round(s.ok/s.tot*100);
+    html+=`<div class="rd-card">
+      <div class="rd-label" style="color:${s.col}">${k}</div>
+      <div class="rd-score" style="color:${s.col}">${s.ok}/${s.tot}</div>
+      <div class="rd-bar"><div class="rd-fill" style="width:${p}%;background:${s.col}"></div></div>
+    </div>`;
+  });
+  document.getElementById('r-domains').innerHTML=html;
+}
+
+function resetQ(){
+  document.getElementById('qs-res').style.display='none';
+  document.getElementById('qs-start').style.display='block';
+}
+</script>
+</body>
+</html>
